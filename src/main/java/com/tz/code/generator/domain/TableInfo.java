@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 表信息
@@ -17,12 +18,12 @@ import java.util.List;
 public class TableInfo {
 
     /**
-     * 表名
+     * 表名，示例：t_config_info
      */
     private String name;
 
     /**
-     * 表名对应的驼峰名
+     * 表名对应的驼峰名，示例：ConfigInfo
      */
     private String humpName;
 
@@ -34,6 +35,10 @@ public class TableInfo {
     /**
      * 列的集合
      */
-    private List<FieldInfo> columnInfoList;
+    private List<FieldInfo> columnInfos;
 
+    /**
+     * java类型名称集合
+     */
+    private Set<String> javaTypeNames;
 }

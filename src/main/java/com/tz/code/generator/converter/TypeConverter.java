@@ -1,6 +1,10 @@
 package com.tz.code.generator.converter;
 
 
+import com.tz.code.generator.config.CodeGeneratorProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.sql.JDBCType;
 import java.sql.Types;
@@ -19,15 +23,17 @@ import java.util.Optional;
  * @see JDBCType
  * @see org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl
  **/
+@Component
 public class TypeConverter {
-
-    protected boolean useJSR310Types;
 
     /**
      * jdbcType和java类型的映射关系;
      * key: jdbcType，value：java类型
      */
     private static final Map<Integer, String> JDBC_TYPE_TO_JAVA_TYPE_MAP = new HashMap<>();
+
+    @Autowired
+    private CodeGeneratorProperties codeGeneratorProperties;
 
     /**
      * jdbcType和java类型的映射关系参考“mybatis-generator-core”包中的{@link org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl#JavaTypeResolverDefaultImpl()}
@@ -120,7 +126,7 @@ public class TypeConverter {
     }
 
     private String calculateJavaType(String defaultJavaType, String javaType) {
-        if (useJSR310Types) {
+        if (codeGeneratorProperties.getUseJSR310Types()) {
             defaultJavaType = javaType;
         }
         return defaultJavaType;

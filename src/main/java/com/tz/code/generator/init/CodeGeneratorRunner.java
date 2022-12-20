@@ -1,9 +1,12 @@
 package com.tz.code.generator.init;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
+import com.tz.code.generator.config.CodeGeneratorProperties;
 import com.tz.code.generator.converter.TypeConverter;
 import com.tz.code.generator.domain.FieldInfo;
 import com.tz.code.generator.domain.TableInfo;
+import com.tz.code.generator.domain.TemplateModelInfo;
+import com.tz.code.generator.resolver.ITemplateResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +15,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -55,19 +61,73 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      */
     private static final String SQL_TABLE_INFO = "SELECT * FROM ${tableNameParam} WHERE 1=2";
 
-    private Set<String> tablePreSet = Sets.newHashSet("t_", "T_", "tab_", "TAB_", "m_", "M_");
-
     @Value("${db.name}")
     private String dbName;
 
     @Autowired
+    private CodeGeneratorProperties codeGeneratorProperties;
+    @Autowired
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    @Autowired
+    private TypeConverter typeConverter;
+    @Autowired
+    private ITemplateResolver templateResolver;
 
     @Override
     public void run(String... args) throws Exception {
+        for (String tableName : codeGeneratorProperties.getTableNames()) {
+            //1、获取模板model数据
+            TemplateModelInfo templateModelInfo = this.getModelInfo(tableName);
+            //2、生成PO
+            codeGeneratorProperties.getJavaModelTemplates().forEach(template -> {
+                String fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "PO.java");
+                this.genCodeFile(templateModelInfo, template, codeGeneratorProperties.getJavaModelPath(), codeGeneratorProperties.getJavaModelPackage(), fileName);
+            });
+            //3、生成mapper
+            for (int i = 0; i < codeGeneratorProperties.getJavaMapperTemplates().size(); i++) {
+                String fileName = null;
+                if (i == 0) {
+                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "Mapper.java");
+                } else if (i == 1) {
+                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "UdfMapper.java");
+                }
+                this.genCodeFile(templateModelInfo, codeGeneratorProperties.getJavaMapperTemplates().get(i), codeGeneratorProperties.getJavaMapperPath(), codeGeneratorProperties.getJavaMapperPackage(), fileName);
+            }
+            //4、生成xml
+            for (int i = 0; i < codeGeneratorProperties.getMapperXmlTemplates().size(); i++) {
+                String fileName = null;
+                if (i == 0) {
+                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "Mapper.xml");
+                } else if (i == 1) {
+                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "UdfMapper.xml");
+                }
+                this.genCodeFile(templateModelInfo, codeGeneratorProperties.getMapperXmlTemplates().get(i), codeGeneratorProperties.getMapperXmlPath(), codeGeneratorProperties.getMapperXmlPackage(), fileName);
+            }
+        }
+    }
+
+    private void genCodeFile(TemplateModelInfo templateModelInfo, String template, String javaModelPath, String javaModelPackage, String fileName) {
+        //1、得到解析后的模板内容
+        String templateContent = templateResolver.resolve(template, templateModelInfo);
+        //2、生成代码文件
+        String[] packageArrays = StringUtils.split(javaModelPackage, ".");
+        String filePath = StringUtils.join(Lists.newArrayList(javaModelPath, StringUtils.join(packageArrays, File.separator), fileName).toArray()
+                , File.separator);
+        try {
+            File file = new File(filePath);
+            if (!(file.getParentFile().exists())) {
+                file.getParentFile().mkdirs();
+            }
+            FileCopyUtils.copy(templateContent.getBytes(), file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private TemplateModelInfo getModelInfo(String tableName) {
         Map<String, String> paramMap = new HashMap<>(2);
         paramMap.put(DB_NAME_PARAM, dbName);
-        paramMap.put(TABLE_NAME_PARAM, "t_config");
+        paramMap.put(TABLE_NAME_PARAM, tableName);
         TableInfo tableInfo = namedParameterJdbcTemplate.queryForObject(SQL_TABLE, paramMap, (resultSet, rowNum) -> this.mapperTableInfo(resultSet, rowNum));
         //字段和注释的对应Map，key:字段名，value:字段对应的注释
         Map<String, String> fieldToCommentMap = new HashMap<>();
@@ -76,8 +136,17 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         this.setFieldInfo(paramMap, fieldToCommentMap, primaryKeyFieldSet);
 
         SqlRowSet sqlRowSet = this.queryTableFieldInfo(paramMap);
-        List<FieldInfo> fieldInfoList = this.buildFieldInfoList(sqlRowSet, fieldToCommentMap, primaryKeyFieldSet);
-        tableInfo.setColumnInfoList(fieldInfoList);
+        Set<String> javaTypeNames = new HashSet<>();
+        List<FieldInfo> fieldInfos = this.buildFieldInfoList(sqlRowSet, fieldToCommentMap, primaryKeyFieldSet, javaTypeNames);
+        tableInfo.setColumnInfos(fieldInfos);
+        tableInfo.setJavaTypeNames(javaTypeNames);
+
+        TemplateModelInfo templateModelInfo = new TemplateModelInfo();
+        templateModelInfo.setAuthor(codeGeneratorProperties.getAuthor());
+        templateModelInfo.setJavaModelPackage(codeGeneratorProperties.getJavaModelPackage());
+        templateModelInfo.setJavaMapperPackage(codeGeneratorProperties.getJavaMapperPackage());
+        templateModelInfo.setTableInfo(tableInfo);
+        return templateModelInfo;
     }
 
     private void setFieldInfo(Map<String, String> paramMap, Map<String, String> fieldToCommentMap, Set<String> primaryKeyFieldSet) {
@@ -100,22 +169,27 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         return namedParameterJdbcTemplate.queryForRowSet(querySql, paramMap);
     }
 
-    private List<FieldInfo> buildFieldInfoList(SqlRowSet sqlRowSet, Map<String, String> fieldToCommentMap, Set<String> primaryKeyFieldSet) {
+    private List<FieldInfo> buildFieldInfoList(SqlRowSet sqlRowSet, Map<String, String> fieldToCommentMap, Set<String> primaryKeyFieldSet, Set<String> javaTypeNames) {
         SqlRowSetMetaData metaData = sqlRowSet.getMetaData();
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        TypeConverter typeConverter = new TypeConverter();
         for (int column = 1; column <= metaData.getColumnCount(); column++) {
             String columnName = metaData.getColumnName(column);
             int columnType = metaData.getColumnType(column);
 
             FieldInfo fieldInfo = new FieldInfo();
             fieldInfo.setName(columnName);
+            fieldInfo.setHumpName(this.getFieldHumpName(columnName));
             fieldInfo.setComment(fieldToCommentMap.get(columnName));
             fieldInfo.setPrimaryKeyFlag(primaryKeyFieldSet.contains(columnName) ? true : false);
             fieldInfo.setJdbcTypeName(typeConverter.getJdbcTypeName(columnType));
-            fieldInfo.setJavaTypeName(typeConverter.getJavaTypeName(columnType));
+            String javaTypeName = typeConverter.getJavaTypeName(columnType);
+            fieldInfo.setJavaTypeName(javaTypeName);
+            String[] javaTypeNameSplit = StringUtils.split(javaTypeName, ".");
+            fieldInfo.setJavaTypeSimpleName(javaTypeNameSplit[javaTypeNameSplit.length - 1]);
             fieldInfo.setJavaFieldName(this.getJavaFieldName(columnName));
             fieldInfoList.add(fieldInfo);
+
+            javaTypeNames.add(fieldInfo.getJavaTypeName());
         }
         return fieldInfoList;
     }
@@ -130,7 +204,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     }
 
     private String getTableHumpName(String tableName) {
-        for (String pre : tablePreSet) {
+        for (String pre : codeGeneratorProperties.getTableNamePres()) {
             if (tableName.startsWith(pre)) {
                 tableName = tableName.replaceFirst(pre, "");
                 break;
@@ -141,6 +215,15 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < tableNameSplit.length; i++) {
             stringBuilder.append(StringUtils.capitalize(StringUtils.lowerCase(tableNameSplit[i])));
+        }
+        return stringBuilder.toString();
+    }
+
+    private String getFieldHumpName(String columnName) {
+        String[] columnNameSplit = columnName.split("_");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < columnNameSplit.length; i++) {
+            stringBuilder.append(StringUtils.capitalize(StringUtils.lowerCase(columnNameSplit[i])));
         }
         return stringBuilder.toString();
     }

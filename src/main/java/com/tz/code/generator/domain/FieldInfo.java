@@ -15,9 +15,14 @@ import lombok.Setter;
 public class FieldInfo {
 
     /**
-     * 列名
+     * 列名，示例：user_name
      */
     private String name;
+
+    /**
+     * 列名对应的驼峰名，示例：UserName
+     */
+    private String humpName;
 
     /**
      * 列注释
@@ -35,9 +40,14 @@ public class FieldInfo {
     private String jdbcTypeName;
 
     /**
-     * java类型名称
+     * java类型名称，示例：java.lang.String
      */
     private String javaTypeName;
+
+    /**
+     * java类型简短名称，示例：String
+     */
+    private String javaTypeSimpleName;
 
     /**
      * java属性名称
