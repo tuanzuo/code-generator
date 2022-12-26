@@ -1,5 +1,9 @@
 package ${javaModelPackage};
 
+<#if useGetSetterAnnotation>
+import lombok.Getter;
+import lombok.Setter;
+</#if>
 <#if tableInfo.javaTypeNames??>
 <#list tableInfo.javaTypeNames as item>
 import ${item};
@@ -12,8 +16,12 @@ import ${item};
  * @author ${author}
  * @time ${time}
  */
+<#if useGetSetterAnnotation>
+@Getter
+@Setter
+</#if>
 public class ${tableInfo.humpName}PO {
-    <#if tableInfo.columnInfos??>
+<#if tableInfo.columnInfos??>
     <#list tableInfo.columnInfos as item>
 
     /**
@@ -22,6 +30,7 @@ public class ${tableInfo.humpName}PO {
     private <#if item.javaTypeSimpleName??>${item.javaTypeSimpleName}</#if> <#if item.javaFieldName??>${item.javaFieldName}</#if>;
     </#list>
 
+    <#if !useGetSetterAnnotation>
     <#list tableInfo.columnInfos as item>
     public <#if item.javaTypeSimpleName??>${item.javaTypeSimpleName}</#if> get<#if item.humpName??>${item.humpName}</#if>() {
         return <#if item.javaFieldName??>${item.javaFieldName}</#if>;
@@ -38,4 +47,5 @@ public class ${tableInfo.humpName}PO {
 
     </#list>
     </#if>
+</#if>
 }

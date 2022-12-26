@@ -26,14 +26,34 @@ public class TemplateModelInfo {
     private String time = DateTime.now().toString("yyyy-MM-dd HH:mm:ss");
 
     /**
+     * java仓库实现类的路径
+     */
+    private String javaRepositoryPackage;
+
+    /**
+     * java仓库实现类的包路径
+     */
+    private String javaRepositoryImplPackage;
+
+    /**
      * java模型的包
      */
     private String javaModelPackage;
 
     /**
+     * 是否使用lombok的@Getter和@Setter注解生成getter和setter方法，true:是，false:否
+     */
+    private Boolean useGetSetterAnnotation;
+
+    /**
      * javaMapper的包
      */
     private String javaMapperPackage;
+
+    /**
+     * javaUdfMapper的包路径
+     */
+    private String javaUdfMapperPackage;
 
     /**
      * 表信息

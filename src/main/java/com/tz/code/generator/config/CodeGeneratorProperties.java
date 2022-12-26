@@ -25,6 +25,11 @@ import java.util.Set;
 public class CodeGeneratorProperties {
 
     /**
+     * 是否生成所有表，true:是，false:否
+     */
+    private Boolean allTableFlag = true;
+
+    /**
      * 生成代码的表名称集合
      */
     private List<String> tableNames = new ArrayList<>();
@@ -33,6 +38,31 @@ public class CodeGeneratorProperties {
      * 需要去掉的表名前缀，示例：t_，tab_
      */
     private Set<String> tableNamePres = new HashSet<>();
+
+    /**
+     * java仓库接口的路径
+     */
+    private String javaRepositoryPath;
+
+    /**
+     * java仓库实现类的路径
+     */
+    private String javaRepositoryImplPath;
+
+    /**
+     * java仓库接口的包路径
+     */
+    private String javaRepositoryPackage;
+
+    /**
+     * java仓库实现类的包路径
+     */
+    private String javaRepositoryImplPackage;
+
+    /**
+     * java仓库的模板集合
+     */
+    private List<String> javaRepositoryTemplates = Lists.newArrayList("/repository/IRepository.ftl", "/repository/RepositoryImpl.ftl");
 
     /**
      * java模型的路径
@@ -45,6 +75,11 @@ public class CodeGeneratorProperties {
     private String javaModelPackage;
 
     /**
+     * 是否使用lombok的@Getter和@Setter注解生成getter和setter方法，true:是，false:否
+     */
+    private Boolean useGetSetterAnnotation = false;
+
+    /**
      * java模型的模板集合
      */
     private List<String> javaModelTemplates = Lists.newArrayList("/model/po.ftl");
@@ -55,9 +90,19 @@ public class CodeGeneratorProperties {
     private String javaMapperPath;
 
     /**
+     * javaUdfMapper的路径
+     */
+    private String javaUdfMapperPath;
+
+    /**
      * javaMapper的包路径
      */
     private String javaMapperPackage;
+
+    /**
+     * javaUdfMapper的包路径
+     */
+    private String javaUdfMapperPackage;
 
     /**
      * javaMapper的模板集合
@@ -70,9 +115,19 @@ public class CodeGeneratorProperties {
     private String mapperXmlPath;
 
     /**
+     * udf xml的路径
+     */
+    private String mapperUdfXmlPath;
+
+    /**
      * xml的包路径
      */
     private String mapperXmlPackage;
+
+    /**
+     * udf xml的包路径
+     */
+    private String mapperUdfXmlPackage;
 
     /**
      * xml的模板集合

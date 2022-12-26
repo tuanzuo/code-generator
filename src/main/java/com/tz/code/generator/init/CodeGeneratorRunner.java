@@ -1,13 +1,15 @@
 package com.tz.code.generator.init;
 
-import com.google.common.collect.Lists;
+import com.alibaba.druid.support.json.JSONUtils;
 import com.tz.code.generator.config.CodeGeneratorProperties;
 import com.tz.code.generator.converter.TypeConverter;
 import com.tz.code.generator.domain.FieldInfo;
+import com.tz.code.generator.domain.GenCodeFileContext;
 import com.tz.code.generator.domain.TableInfo;
 import com.tz.code.generator.domain.TemplateModelInfo;
-import com.tz.code.generator.resolver.ITemplateResolver;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -15,10 +17,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
+import org.springframework.util.CollectionUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -32,6 +32,8 @@ import java.util.*;
  **/
 @Component
 public class CodeGeneratorRunner implements CommandLineRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CodeGeneratorRunner.class);
 
     private static final String REPLCE_TABLE_NAME_PARAM = "${tableNameParam}";
     private static final String DB_NAME_PARAM = "dbName";
@@ -49,6 +51,11 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     private static final String PRIMARY_KEY_CONSTANT = "PRI";
 
     /**
+     * 数据库下的所有表
+     */
+    private static final String SQL_DB_TABLE = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = :dbName";
+    /**
+     * /**
      * 表的schema信息查询sql
      */
     private static final String SQL_TABLE = "SELECT TABLE_NAME,TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = :dbName AND TABLE_NAME = :tableName";
@@ -71,56 +78,28 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     @Autowired
     private TypeConverter typeConverter;
     @Autowired
-    private ITemplateResolver templateResolver;
+    private List<IGenCodeFile> genCodeFiles;
 
     @Override
     public void run(String... args) throws Exception {
+        //1、设置表的名称
+        this.setTableNames();
         for (String tableName : codeGeneratorProperties.getTableNames()) {
-            //1、获取模板model数据
+            //2.1、获取模板model数据
             TemplateModelInfo templateModelInfo = this.getModelInfo(tableName);
-            //2、生成PO
-            codeGeneratorProperties.getJavaModelTemplates().forEach(template -> {
-                String fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "PO.java");
-                this.genCodeFile(templateModelInfo, template, codeGeneratorProperties.getJavaModelPath(), codeGeneratorProperties.getJavaModelPackage(), fileName);
-            });
-            //3、生成mapper
-            for (int i = 0; i < codeGeneratorProperties.getJavaMapperTemplates().size(); i++) {
-                String fileName = null;
-                if (i == 0) {
-                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "Mapper.java");
-                } else if (i == 1) {
-                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "UdfMapper.java");
-                }
-                this.genCodeFile(templateModelInfo, codeGeneratorProperties.getJavaMapperTemplates().get(i), codeGeneratorProperties.getJavaMapperPath(), codeGeneratorProperties.getJavaMapperPackage(), fileName);
-            }
-            //4、生成xml
-            for (int i = 0; i < codeGeneratorProperties.getMapperXmlTemplates().size(); i++) {
-                String fileName = null;
-                if (i == 0) {
-                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "Mapper.xml");
-                } else if (i == 1) {
-                    fileName = StringUtils.join(templateModelInfo.getTableInfo().getHumpName(), "UdfMapper.xml");
-                }
-                this.genCodeFile(templateModelInfo, codeGeneratorProperties.getMapperXmlTemplates().get(i), codeGeneratorProperties.getMapperXmlPath(), codeGeneratorProperties.getMapperXmlPackage(), fileName);
-            }
+            //2.2、生成代码文件
+            GenCodeFileContext context = GenCodeFileContext.builder().templateModelInfo(templateModelInfo).build();
+            genCodeFiles.forEach(temp -> temp.genCodeFile(context));
         }
     }
 
-    private void genCodeFile(TemplateModelInfo templateModelInfo, String template, String javaModelPath, String javaModelPackage, String fileName) {
-        //1、得到解析后的模板内容
-        String templateContent = templateResolver.resolve(template, templateModelInfo);
-        //2、生成代码文件
-        String[] packageArrays = StringUtils.split(javaModelPackage, ".");
-        String filePath = StringUtils.join(Lists.newArrayList(javaModelPath, StringUtils.join(packageArrays, File.separator), fileName).toArray()
-                , File.separator);
-        try {
-            File file = new File(filePath);
-            if (!(file.getParentFile().exists())) {
-                file.getParentFile().mkdirs();
-            }
-            FileCopyUtils.copy(templateContent.getBytes(), file);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void setTableNames() {
+        if (codeGeneratorProperties.getAllTableFlag() && CollectionUtils.isEmpty(codeGeneratorProperties.getTableNames())) {
+            Map<String, String> paramMap = new HashMap<>(1);
+            paramMap.put(DB_NAME_PARAM, dbName);
+            List<String> allTableNames = namedParameterJdbcTemplate.query(SQL_DB_TABLE, paramMap, (rs, rowNum) -> rs.getString(TABLE_NAME_FIELD));
+            codeGeneratorProperties.setTableNames(allTableNames);
+            LOGGER.info("[生成代码] [未配置生成表的名称-tableNames参数] [已开启生成所有表的配置] 数据库：{}，所有表：{}", dbName, JSONUtils.toJSONString(allTableNames));
         }
     }
 
@@ -143,8 +122,12 @@ public class CodeGeneratorRunner implements CommandLineRunner {
 
         TemplateModelInfo templateModelInfo = new TemplateModelInfo();
         templateModelInfo.setAuthor(codeGeneratorProperties.getAuthor());
+        templateModelInfo.setJavaRepositoryPackage(codeGeneratorProperties.getJavaRepositoryPackage());
+        templateModelInfo.setJavaRepositoryImplPackage(codeGeneratorProperties.getJavaRepositoryImplPackage());
         templateModelInfo.setJavaModelPackage(codeGeneratorProperties.getJavaModelPackage());
+        templateModelInfo.setUseGetSetterAnnotation(codeGeneratorProperties.getUseGetSetterAnnotation());
         templateModelInfo.setJavaMapperPackage(codeGeneratorProperties.getJavaMapperPackage());
+        templateModelInfo.setJavaUdfMapperPackage(codeGeneratorProperties.getJavaUdfMapperPackage());
         templateModelInfo.setTableInfo(tableInfo);
         return templateModelInfo;
     }
