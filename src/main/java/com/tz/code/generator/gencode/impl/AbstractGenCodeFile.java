@@ -1,9 +1,11 @@
-package com.tz.code.generator.init.impl;
+package com.tz.code.generator.gencode.impl;
 
+import com.alibaba.druid.support.json.JSONUtils;
 import com.google.common.collect.Lists;
 import com.tz.code.generator.config.CodeGeneratorProperties;
+import com.tz.code.generator.constant.CodeGenConstant;
 import com.tz.code.generator.domain.TemplateModelInfo;
-import com.tz.code.generator.init.IGenCodeFile;
+import com.tz.code.generator.gencode.IGenCodeFile;
 import com.tz.code.generator.resolver.ITemplateResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,11 +44,12 @@ public abstract class AbstractGenCodeFile implements IGenCodeFile {
     protected void doGenCodeFile(TemplateModelInfo templateModelInfo, String template, String filePath, String filePackage, String fileName) {
         //1、得到解析后的模板内容
         String templateContent = templateResolver.resolve(template, templateModelInfo);
-        //2、生成代码文件
-        String[] packageArrays = StringUtils.split(filePackage, ".");
+        //2、构建文件路径名
+        String[] packageArrays = StringUtils.split(filePackage, CodeGenConstant.SYMBOL_SPOT);
         String pathName = StringUtils.join(Lists.newArrayList(filePath, StringUtils.join(packageArrays, File.separator), fileName).toArray()
                 , File.separator);
         try {
+            //3、生成代码文件
             File file = new File(pathName);
             if (!(file.getParentFile().exists())) {
                 file.getParentFile().mkdirs();
@@ -54,7 +57,8 @@ public abstract class AbstractGenCodeFile implements IGenCodeFile {
             FileCopyUtils.copy(templateContent.getBytes(), file);
             LOGGER.info("[生成代码] {}", pathName);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("[生成代码] [异常] templateModelInfo：{}，template：{}，filePath：{}，filePackage：{}，fileName：{}",
+                    JSONUtils.toJSONString(templateModelInfo), template, filePath, filePackage, fileName, e);
         }
     }
 }

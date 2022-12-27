@@ -20,6 +20,11 @@ public class FieldInfo {
     private String name;
 
     /**
+     * 对mysql关键字转换后的列名，示例：status会转换成`status`
+     */
+    private String convertName;
+
+    /**
      * 列名对应的驼峰名，示例：UserName
      */
     private String humpName;
@@ -35,7 +40,7 @@ public class FieldInfo {
     private Boolean primaryKeyFlag;
 
     /**
-     * jdbc类型名称
+     * jdbc类型名称，示例：VARCHAR
      */
     private String jdbcTypeName;
 
@@ -50,7 +55,7 @@ public class FieldInfo {
     private String javaTypeSimpleName;
 
     /**
-     * java属性名称
+     * java属性名称，示例：userName
      */
     private String javaFieldName;
 

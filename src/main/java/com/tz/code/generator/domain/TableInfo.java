@@ -28,6 +28,11 @@ public class TableInfo {
     private String humpName;
 
     /**
+     * 表名对应的首字母小写，示例：configInfo
+     */
+    private String uncapitalizeName;
+
+    /**
      * 表注释
      */
     private String comment;
@@ -39,6 +44,7 @@ public class TableInfo {
 
     /**
      * java类型名称集合
+     * @see FieldInfo#javaTypeName
      */
     private Set<String> javaTypeNames;
 }

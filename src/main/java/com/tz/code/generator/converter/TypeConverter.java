@@ -108,6 +108,13 @@ public class TypeConverter {
         return this.overrideDefaultType(defaultJavaType, jdbcType);
     }
 
+    /**
+     * 覆盖默认的类型
+     *
+     * @param defaultJavaType 默认的javaType
+     * @param jdbcType
+     * @return
+     */
     private String overrideDefaultType(String defaultJavaType, int jdbcType) {
         switch (jdbcType) {
             case Types.DATE:
@@ -125,6 +132,13 @@ public class TypeConverter {
         return defaultJavaType;
     }
 
+    /**
+     * 计算javaType
+     *
+     * @param defaultJavaType 默认的javaType
+     * @param javaType
+     * @return
+     */
     private String calculateJavaType(String defaultJavaType, String javaType) {
         if (codeGeneratorProperties.getUseJSR310Types()) {
             defaultJavaType = javaType;

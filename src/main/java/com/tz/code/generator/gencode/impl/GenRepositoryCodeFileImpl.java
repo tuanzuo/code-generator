@@ -1,4 +1,4 @@
-package com.tz.code.generator.init.impl;
+package com.tz.code.generator.gencode.impl;
 
 import com.tz.code.generator.domain.GenCodeFileContext;
 import com.tz.code.generator.domain.TemplateModelInfo;

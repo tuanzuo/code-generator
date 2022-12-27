@@ -1,6 +1,7 @@
 package com.tz.code.generator.config;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,6 +26,11 @@ import java.util.Set;
 public class CodeGeneratorProperties {
 
     /**
+     * mysql关键字
+     */
+    private Set<String> mysqlKeyWords = Sets.newHashSet("name", "status", "type", "key", "value", "code", "valid");
+
+    /**
      * 是否生成所有表，true:是，false:否
      */
     private Boolean allTableFlag = true;
@@ -35,7 +41,7 @@ public class CodeGeneratorProperties {
     private List<String> tableNames = new ArrayList<>();
 
     /**
-     * 需要去掉的表名前缀，示例：t_，tab_
+     * 需要去掉的表名前缀，示例：t_,tab_,m_
      */
     private Set<String> tableNamePres = new HashSet<>();
 

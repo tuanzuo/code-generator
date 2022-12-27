@@ -26,7 +26,7 @@ public class TemplateModelInfo {
     private String time = DateTime.now().toString("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * java仓库实现类的路径
+     * java仓库接口的路径
      */
     private String javaRepositoryPackage;
 
