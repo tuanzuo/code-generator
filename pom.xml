@@ -75,6 +75,7 @@
 			<groupId>org.mybatis.generator</groupId>
 			<artifactId>mybatis-generator-core</artifactId>
 			<version>1.4.1</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
