@@ -1,0 +1,46 @@
+server:
+  port: 80
+  compression:
+    #启用压缩
+    enabled: true
+    #设置压缩支持的格式（默认支持text/html等，但不支持application/json）
+    mime-types: application/json,text/html,text/xml,text/plain,text/css,text/javascript,application/javascript
+  error:
+    #指定错误path
+    path: /error
+  servlet:
+    jsp:
+      #不注册JSP servlet
+      registered: false
+
+spring:
+  application:
+    #配置应用名
+    name: codegenerator
+  profiles: 
+    active: local
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  #数据库连接
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${db.host}:${db.port}/${db.name}?&useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false
+    username: ${db.username}
+    password: ${db.password}
+    initialSize: ${db.initialSize}
+    minIdle: ${db.minIdle}
+    maxActive: ${db.maxActive}
+    maxWait: ${db.maxWait}
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 200
+    filters: stat,wall,log4j
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+    useGlobalDataSourceStat: true
