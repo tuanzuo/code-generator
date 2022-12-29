@@ -20,8 +20,6 @@ public interface ${tableInfo.humpName}Mapper {
 
     ${tableInfo.humpName}PO selectOne(${tableInfo.humpName}PO row);
 
-    List<${tableInfo.humpName}PO> selectListForLike(${tableInfo.humpName}PO row);
-
     int selectCount(${tableInfo.humpName}PO row);
 
     int insert(${tableInfo.humpName}PO row);

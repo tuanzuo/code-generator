@@ -14,7 +14,7 @@
     </#list>
     </#if>
     </resultMap>
-    
+
     <sql id="Base_Column_List">
         <#if tableInfo.columnInfos??>
         <#list tableInfo.columnInfos as item>
@@ -22,7 +22,7 @@
         </#list>
         </#if>
     </sql>
-    
+
     <sql id="whereCommon">
         <#if tableInfo.columnInfos??>
         <#list tableInfo.columnInfos as item>
@@ -35,22 +35,13 @@
     <sql id="where">
         <include refid="whereCommon" />
     </sql>
-    <sql id="whereForLike">
-        <include refid="whereCommon" />
-        <#noparse>
-        <!-- <if test="title != null and title != ''">
-        and title like CONCAT(#{title,jdbcType=VARCHAR},'%')
-        </if> -->
-        </#noparse>
-    </sql>
-    
+
     <select id="selectByPrimaryKey" parameterType="${primaryKeyTypeJava}" resultMap="BaseResultMap">
         select <include refid="Base_Column_List" />
         from ${tableInfo.name}
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
     </select>
 
-    <!--查询列表(没有进行模糊查询)-->
     <select id="selectList" parameterType="${po}" resultMap="BaseResultMap">
         select <include refid="Base_Column_List" />
         from ${tableInfo.name}
@@ -59,7 +50,6 @@
         </where>
     </select>
 
-    <!--查询一条数据(没有进行模糊查询)-->
     <select id="selectOne" parameterType="${po}" resultMap="BaseResultMap">
         select <include refid="Base_Column_List" />
         from ${tableInfo.name}
@@ -68,24 +58,14 @@
         </where>
         limit 1
     </select>
-    
-    <!--模糊查询-->
-    <select id="selectListForLike" parameterType="${po}" resultMap="BaseResultMap">
-        select <include refid="Base_Column_List" />
-        from ${tableInfo.name}
-        <where>
-        <include refid="whereForLike" />
-        </where>
-    </select>
-    
-    <!-- 查询个数 -->
+
     <select id="selectCount" parameterType="${po}" resultType="int">
         select count(1) from ${tableInfo.name}
         <where>
         <include refid="where" />
         </where>
     </select>
-   
+
     <insert id="insert" parameterType="${po}" useGeneratedKeys="true" keyColumn="${primaryKeySqlFieldName}" keyProperty="${primaryKeyJavaFieldName}">
         insert into ${tableInfo.name} (<include refid="Base_Column_List" />)
         values (
@@ -95,7 +75,7 @@
         </#list>
         </#if>)
     </insert>
-    
+
     <insert id="insertBatch" parameterType="java.util.List">
         insert into ${tableInfo.name} (<include refid="Base_Column_List" />)
         values 
@@ -144,7 +124,7 @@
         </set>
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
     </update>
-    
+
     <update id="updateByPrimaryKey" parameterType="${po}">
         update ${tableInfo.name}
         set
@@ -155,7 +135,7 @@
         </#if>
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
     </update>
-    
+
     <delete id="deleteByPrimaryKey" parameterType="${primaryKeyTypeJava}">
         delete from ${tableInfo.name}
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}

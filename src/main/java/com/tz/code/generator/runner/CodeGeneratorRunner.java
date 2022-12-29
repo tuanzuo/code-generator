@@ -20,6 +20,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StopWatch;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -87,6 +88,8 @@ public class CodeGeneratorRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         //1、设置表的名称
         this.setTableNames();
         for (String tableName : codeGeneratorProperties.getTableNames()) {
@@ -96,6 +99,8 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             GenCodeFileContext context = GenCodeFileContext.builder().templateModelInfo(templateModelInfo).build();
             genCodeFiles.forEach(temp -> temp.genCodeFile(context));
         }
+        stopWatch.stop();
+        LOGGER.info("[代码生成完成] 表：{}个，耗时：{}s", codeGeneratorProperties.getTableNames().size(), stopWatch.getTotalTimeSeconds());
     }
 
     /**
