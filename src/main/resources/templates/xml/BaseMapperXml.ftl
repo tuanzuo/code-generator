@@ -27,7 +27,7 @@
         <#if tableInfo.columnInfos??>
         <#list tableInfo.columnInfos as item>
         <if test="${item.javaFieldName} != null<#if (item.javaTypeName)=='java.lang.String'> and ${item.javaFieldName} != ''</#if>">
-        and ${item.convertName} = ${"#{"}${item.javaFieldName},jdbcType=${item.jdbcTypeName}${"}"}
+            and ${item.convertName} = ${"#{"}${item.javaFieldName},jdbcType=${item.jdbcTypeName}${"}"}
         </if>
 		</#list>
     	</#if>
