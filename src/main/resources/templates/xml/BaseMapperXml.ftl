@@ -42,6 +42,15 @@
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
     </select>
 
+    <select id="selectByPrimaryKeys" parameterType="java.util.Set" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from ${tableInfo.name}
+        where ${primaryKeySqlFieldName} in
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")" >
+	        ${"#{"}item,jdbcType=${primaryKeyTypeJdbc}${"}"}
+	    </foreach>
+    </select>
+
     <select id="selectList" parameterType="${po}" resultMap="BaseResultMap">
         select <include refid="Base_Column_List" />
         from ${tableInfo.name}
@@ -116,9 +125,11 @@
         <set>
         <#if tableInfo.columnInfos??>
         <#list tableInfo.columnInfos as item>
+            <#if !item.primaryKeyFlag>
             <if test="${item.javaFieldName} != null" >
                 ${item.convertName} = ${"#{"}${item.javaFieldName},jdbcType=${item.jdbcTypeName}${"}"}<#if item_has_next>,</#if>
             </if>
+            </#if>
         </#list>
         </#if>
         </set>
@@ -130,7 +141,9 @@
         set
         <#if tableInfo.columnInfos??>
         <#list tableInfo.columnInfos as item>
+            <#if !item.primaryKeyFlag>
             ${item.convertName} = ${"#{"}${item.javaFieldName},jdbcType=${item.jdbcTypeName}${"}"}<#if item_has_next>,</#if>
+            </#if>
         </#list>
         </#if>
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
@@ -139,5 +152,13 @@
     <delete id="deleteByPrimaryKey" parameterType="${primaryKeyTypeJava}">
         delete from ${tableInfo.name}
         where ${primaryKeySqlFieldName} = ${"#{"}${primaryKeyJavaFieldName},jdbcType=${primaryKeyTypeJdbc}${"}"}
+    </delete>
+
+    <delete id="deleteByPrimaryKeys" parameterType="java.util.Set">
+        delete from ${tableInfo.name}
+        where ${primaryKeySqlFieldName} in
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")" >
+	        ${"#{"}item,jdbcType=${primaryKeyTypeJdbc}${"}"}
+	    </foreach>
     </delete>
 </mapper>

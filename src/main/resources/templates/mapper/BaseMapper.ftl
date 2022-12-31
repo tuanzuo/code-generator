@@ -4,7 +4,9 @@ package ${javaMapperPackage};
 import ${po};
 import org.apache.ibatis.annotations.Param;
 
+import ${primaryKeyTypeJava};
 import java.util.List;
+import java.util.Set;
 
 /**
  * ${tableInfo.comment}Mapper
@@ -15,6 +17,8 @@ import java.util.List;
 public interface ${tableInfo.humpName}Mapper {
 
     ${tableInfo.humpName}PO selectByPrimaryKey(${primaryKeyTypeJavaSimple} ${primaryKeyJavaFieldName});
+
+    List<${tableInfo.humpName}PO> selectByPrimaryKeys(@Param("list") Set<${primaryKeyTypeJavaSimple}> ${primaryKeyJavaFieldName}List);
 
     List<${tableInfo.humpName}PO> selectList(${tableInfo.humpName}PO row);
 
@@ -33,4 +37,6 @@ public interface ${tableInfo.humpName}Mapper {
     int updateByPrimaryKey(${tableInfo.humpName}PO row);
 
     int deleteByPrimaryKey(${primaryKeyTypeJavaSimple} ${primaryKeyJavaFieldName});
+
+    int deleteByPrimaryKeys(@Param("list") Set<${primaryKeyTypeJavaSimple}> ${primaryKeyJavaFieldName}List);
 }
