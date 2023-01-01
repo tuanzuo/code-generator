@@ -100,7 +100,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             genCodeFiles.forEach(temp -> temp.genCodeFile(context));
         }
         stopWatch.stop();
-        LOGGER.info("[代码生成完成] 表：{}个，耗时：{}s", codeGeneratorProperties.getTableNames().size(), stopWatch.getTotalTimeSeconds());
+        LOGGER.info("[生成代码] [完成] 表：{}个，耗时：{}s", codeGeneratorProperties.getTableNames().size(), stopWatch.getTotalTimeSeconds());
     }
 
     /**
