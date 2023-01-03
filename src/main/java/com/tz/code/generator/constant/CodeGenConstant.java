@@ -29,5 +29,9 @@ public class CodeGenConstant {
      */
     public static final String SYMBOL_OBLIQUE_SINGLE_QUOTES = "`";
 
+    /**
+     * Freemarker模板解析器类型
+     */
+    public static final String RESOLVER_TYPE_FREEMARKER = "freemarker";
 
 }

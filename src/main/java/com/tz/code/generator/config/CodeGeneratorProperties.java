@@ -7,7 +7,6 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,9 +35,9 @@ public class CodeGeneratorProperties {
     private Boolean allTableFlag = true;
 
     /**
-     * 生成代码的表名称集合
+     * 生成代码的表名称集合，示例：t_config,t_user
      */
-    private List<String> tableNames = new ArrayList<>();
+    private Set<String> tableNames = new HashSet<>();
 
     /**
      * 需要去掉的表名前缀，示例：t_,tab_,m_

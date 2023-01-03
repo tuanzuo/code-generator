@@ -1,6 +1,7 @@
 package com.tz.code.generator.runner;
 
 import com.alibaba.druid.support.json.JSONUtils;
+import com.google.common.collect.Sets;
 import com.tz.code.generator.config.CodeGeneratorProperties;
 import com.tz.code.generator.constant.CodeGenConstant;
 import com.tz.code.generator.converter.TypeConverter;
@@ -113,7 +114,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             paramMap.put(DB_NAME_PARAM, dbName);
             List<String> allTableNames = namedParameterJdbcTemplate.query(SQL_DB_TABLE, paramMap, (rs, rowNum) -> rs.getString(TABLE_NAME_FIELD));
             //重新设置表名称
-            codeGeneratorProperties.setTableNames(Optional.ofNullable(allTableNames).orElse(new ArrayList<>()));
+            codeGeneratorProperties.setTableNames(Sets.newHashSet(Optional.ofNullable(allTableNames).orElse(new ArrayList<>())));
             LOGGER.info("[生成代码] [未配置生成表的名称-tableNames参数] [已开启生成所有表的配置] 数据库：{}，所有表：{}个，{}", dbName, allTableNames.size(), JSONUtils.toJSONString(allTableNames));
         }
     }

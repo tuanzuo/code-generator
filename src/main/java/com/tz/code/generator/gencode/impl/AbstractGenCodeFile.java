@@ -15,6 +15,7 @@ import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 生成代码文件抽象类
@@ -30,7 +31,7 @@ public abstract class AbstractGenCodeFile implements IGenCodeFile {
     @Autowired
     public CodeGeneratorProperties codeGeneratorProperties;
     @Autowired
-    private ITemplateResolver templateResolver;
+    private List<ITemplateResolver> templateResolvers;
 
     /**
      * 处理代码文件生成
@@ -43,7 +44,7 @@ public abstract class AbstractGenCodeFile implements IGenCodeFile {
      */
     protected void doGenCodeFile(TemplateModelInfo templateModelInfo, String template, String filePath, String filePackage, String fileName) {
         //1、得到解析后的模板内容
-        String templateContent = templateResolver.resolve(template, templateModelInfo);
+        String templateContent = templateResolvers.stream().filter(temp -> temp.support(CodeGenConstant.RESOLVER_TYPE_FREEMARKER)).findFirst().get().resolve(template, templateModelInfo);
         //2、构建文件路径名
         String[] packageArrays = StringUtils.split(filePackage, CodeGenConstant.SYMBOL_SPOT);
         String pathName = StringUtils.join(Lists.newArrayList(filePath, StringUtils.join(packageArrays, File.separator), fileName).toArray()

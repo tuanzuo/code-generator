@@ -10,6 +10,13 @@ package com.tz.code.generator.resolver;
 public interface ITemplateResolver {
 
     /**
+     * 是否支持
+     * @param resolverType 解析器类型
+     * @return true:支持，false:不支持
+     */
+    boolean support(String resolverType);
+
+    /**
      * 模板解析
      *
      * @param templateName 模板
