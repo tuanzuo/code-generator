@@ -1,6 +1,7 @@
 package com.tz.code.generator.resolver.impl;
 
 import com.alibaba.druid.support.json.JSONUtils;
+import com.tz.code.generator.constant.CodeGenConstant;
 import com.tz.code.generator.resolver.ITemplateResolver;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -36,6 +37,11 @@ public class FreemarkerTemplateResolver implements ITemplateResolver {
      */
     @Autowired
     private freemarker.template.Configuration configuration;
+
+    @Override
+    public boolean support(String resolverType) {
+        return CodeGenConstant.RESOLVER_TYPE_FREEMARKER.equalsIgnoreCase(resolverType);
+    }
 
     @Override
     public String resolve(String templateName, Object model) {
