@@ -46,6 +46,21 @@ public class TemplateModelInfo {
     private Boolean useGetSetterAnnotation;
 
     /**
+     * 是否使用lombok的@Builder注解，true:是，false:否
+     */
+    private Boolean useBuilderAnnotation;
+
+    /**
+     * 是否使用lombok的@AllArgsConstructor注解，true:是，false:否
+     */
+    private Boolean useAllArgsConstructorAnnotation;
+
+    /**
+     * 是否使用lombok的@NoArgsConstructor注解，true:是，false:否
+     */
+    private Boolean useNoArgsConstructorAnnotation;
+
+    /**
      * javaMapper的包
      */
     private String javaMapperPackage;

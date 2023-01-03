@@ -157,6 +157,9 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         templateModelInfo.setJavaRepositoryImplPackage(codeGeneratorProperties.getJavaRepositoryImplPackage());
         templateModelInfo.setJavaModelPackage(codeGeneratorProperties.getJavaModelPackage());
         templateModelInfo.setUseGetSetterAnnotation(codeGeneratorProperties.getUseGetSetterAnnotation());
+        templateModelInfo.setUseBuilderAnnotation(codeGeneratorProperties.getUseBuilderAnnotation());
+        templateModelInfo.setUseAllArgsConstructorAnnotation(codeGeneratorProperties.getUseAllArgsConstructorAnnotation());
+        templateModelInfo.setUseNoArgsConstructorAnnotation(codeGeneratorProperties.getUseNoArgsConstructorAnnotation());
         templateModelInfo.setJavaMapperPackage(codeGeneratorProperties.getJavaMapperPackage());
         templateModelInfo.setJavaUdfMapperPackage(codeGeneratorProperties.getJavaUdfMapperPackage());
         templateModelInfo.setTableInfo(tableInfo);
@@ -278,8 +281,14 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      */
     private String getTableHumpName(String tableName) {
         for (String pre : Optional.ofNullable(codeGeneratorProperties.getTableNamePres()).orElse(new HashSet<>())) {
-            if (tableName.startsWith(pre)) {
-                tableName = tableName.replaceFirst(pre, CodeGenConstant.SYMBOL_SPACE);
+            if (StringUtils.startsWithIgnoreCase(tableName, pre)) {
+                tableName = StringUtils.removeStartIgnoreCase(tableName, pre);
+                break;
+            }
+        }
+        for (String suf : Optional.ofNullable(codeGeneratorProperties.getTableNameSufs()).orElse(new HashSet<>())) {
+            if (StringUtils.endsWithIgnoreCase(tableName, suf)) {
+                tableName = StringUtils.removeEndIgnoreCase(tableName, suf);
                 break;
             }
         }

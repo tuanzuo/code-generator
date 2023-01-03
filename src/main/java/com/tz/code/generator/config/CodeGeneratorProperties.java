@@ -46,6 +46,11 @@ public class CodeGeneratorProperties {
     private Set<String> tableNamePres = new HashSet<>();
 
     /**
+     * 需要去掉的表名后缀，示例：_0,_1,_2022,_2023
+     */
+    private Set<String> tableNameSufs = new HashSet<>();
+
+    /**
      * java仓库接口的路径
      */
     private String javaRepositoryPath;
@@ -84,6 +89,21 @@ public class CodeGeneratorProperties {
      * 是否使用lombok的@Getter和@Setter注解生成getter和setter方法，true:是，false:否
      */
     private Boolean useGetSetterAnnotation = false;
+
+    /**
+     * 是否使用lombok的@Builder注解，true:是，false:否
+     */
+    private Boolean useBuilderAnnotation = false;
+
+    /**
+     * 是否使用lombok的@AllArgsConstructor注解，true:是，false:否
+     */
+    private Boolean useAllArgsConstructorAnnotation = false;
+
+    /**
+     * 是否使用lombok的@NoArgsConstructor注解，true:是，false:否
+     */
+    private Boolean useNoArgsConstructorAnnotation = false;
 
     /**
      * java模型的模板集合

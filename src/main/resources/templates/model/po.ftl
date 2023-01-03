@@ -4,6 +4,15 @@ package ${javaModelPackage};
 import lombok.Getter;
 import lombok.Setter;
 </#if>
+<#if useBuilderAnnotation>
+import lombok.Builder;
+</#if>
+<#if useAllArgsConstructorAnnotation>
+import lombok.AllArgsConstructor;
+</#if>
+<#if useNoArgsConstructorAnnotation>
+import lombok.NoArgsConstructor;
+</#if>
 <#if tableInfo.javaTypeNames??>
 <#list tableInfo.javaTypeNames as item>
 import ${item};
@@ -19,6 +28,15 @@ import ${item};
 <#if useGetSetterAnnotation>
 @Getter
 @Setter
+</#if>
+<#if useBuilderAnnotation>
+@Builder
+</#if>
+<#if useAllArgsConstructorAnnotation>
+@AllArgsConstructor
+</#if>
+<#if useNoArgsConstructorAnnotation>
+@NoArgsConstructor
 </#if>
 public class ${tableInfo.humpName}PO {
 <#if tableInfo.columnInfos??>
