@@ -1,7 +1,6 @@
 package com.tz.code.generator.runner;
 
 import com.alibaba.druid.support.json.JSONUtils;
-import com.google.common.collect.Sets;
 import com.tz.code.generator.config.CodeGeneratorProperties;
 import com.tz.code.generator.constant.CodeGenConstant;
 import com.tz.code.generator.converter.TypeConverter;
@@ -73,6 +72,11 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     private static final String SQL_TABLE_INFO = "SELECT * FROM ${tableNameParam} WHERE 1=2";
 
     /**
+     * 生成代码时已生成完成的表名称对应的驼峰名称集合
+     */
+    private Set<String> codeGenExistTableHumpName = new HashSet<>();
+
+    /**
      * 数据库名称
      */
     @Value("${db.name}")
@@ -96,6 +100,9 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         for (String tableName : codeGeneratorProperties.getTableNames()) {
             //2.1、获取模板model数据
             TemplateModelInfo templateModelInfo = this.getModelInfo(tableName);
+            if (null == templateModelInfo) {
+                continue;
+            }
             //2.2、生成代码文件
             GenCodeFileContext context = GenCodeFileContext.builder().templateModelInfo(templateModelInfo).build();
             genCodeFiles.forEach(temp -> temp.genCodeFile(context));
@@ -114,7 +121,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             paramMap.put(DB_NAME_PARAM, dbName);
             List<String> allTableNames = namedParameterJdbcTemplate.query(SQL_DB_TABLE, paramMap, (rs, rowNum) -> rs.getString(TABLE_NAME_FIELD));
             //重新设置表名称
-            codeGeneratorProperties.setTableNames(Sets.newHashSet(Optional.ofNullable(allTableNames).orElse(new ArrayList<>())));
+            codeGeneratorProperties.setTableNames(Optional.ofNullable(allTableNames).orElse(new ArrayList<>()));
             LOGGER.info("[生成代码] [未配置生成表的名称-tableNames参数] [已开启生成所有表的配置] 数据库：{}，所有表：{}个，{}", dbName, allTableNames.size(), JSONUtils.toJSONString(allTableNames));
         }
     }
@@ -126,13 +133,21 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      * @return
      */
     private TemplateModelInfo getModelInfo(String tableName) {
-        Map<String, String> paramMap = new HashMap<>(2);
-        //1、查询表信息
-        TableInfo tableInfo = this.queryTableInfo(tableName, paramMap);
+        //0、构建表信息
+        TableInfo tableInfo = this.buildTableInfo(tableName);
+        if (codeGenExistTableHumpName.contains(tableInfo.getHumpName())) {
+            LOGGER.warn("[生成代码] [表对应的代码文件已生成过不再重复生成] 数据库：{}，表：{}，表的驼峰名：{}", dbName, tableName, tableInfo.getHumpName());
+            return null;
+        }
+        codeGenExistTableHumpName.add(tableInfo.getHumpName());
+
+        //1、查询表的备注
+        String tableComment = this.queryTableComment(tableName);
+        tableInfo.setComment(tableComment);
         //2、查询表的元数据信息
-        SqlRowSetMetaData metaData = this.queryTableMetaData(paramMap);
+        SqlRowSetMetaData metaData = this.queryTableMetaData(tableName);
         //3、查询表的字段信息
-        List<Map<String, Object>> columnList = this.queryColumnList(paramMap);
+        List<Map<String, Object>> columnList = this.queryColumnList(tableName);
         //java类型名称集合
         Set<String> javaTypeNames = new HashSet<>();
         //4、构建字段信息
@@ -143,6 +158,20 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         //6、构建模板对应的模型信息
         TemplateModelInfo templateModelInfo = this.buildTemplateModelInfo(tableInfo);
         return templateModelInfo;
+    }
+
+    /**
+     * 构建表信息
+     *
+     * @param tableName 表名称
+     * @return
+     */
+    private TableInfo buildTableInfo(String tableName) {
+        TableInfo tableInfo = new TableInfo();
+        tableInfo.setName(this.getTableName(tableName));
+        tableInfo.setHumpName(this.getTableHumpName(tableName));
+        tableInfo.setUncapitalizeName(StringUtils.uncapitalize(tableInfo.getHumpName()));
+        return tableInfo;
     }
 
     /**
@@ -168,37 +197,39 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     }
 
     /**
-     * 查询表信息
+     * 查询表的注释
      *
      * @param tableName 表名
-     * @param paramMap  参数
      * @return
      */
-    private TableInfo queryTableInfo(String tableName, Map<String, String> paramMap) {
+    private String queryTableComment(String tableName) {
+        Map<String, String> paramMap = new HashMap<>(2);
         paramMap.put(DB_NAME_PARAM, dbName);
         paramMap.put(TABLE_NAME_PARAM, tableName);
-        return namedParameterJdbcTemplate.queryForObject(SQL_TABLE, paramMap, (resultSet, rowNum) -> this.mapperTableInfo(resultSet, rowNum));
+        return namedParameterJdbcTemplate.queryForObject(SQL_TABLE, paramMap, (resultSet, rowNum) -> this.mapperTableComment(resultSet, rowNum));
     }
 
     /**
      * 查询表的字段信息
      *
-     * @param paramMap 参数
+     * @param tableName 表名称
      * @return
      */
-    private List<Map<String, Object>> queryColumnList(Map<String, String> paramMap) {
+    private List<Map<String, Object>> queryColumnList(String tableName) {
+        Map<String, String> paramMap = new HashMap<>(2);
+        paramMap.put(DB_NAME_PARAM, dbName);
+        paramMap.put(TABLE_NAME_PARAM, tableName);
         return namedParameterJdbcTemplate.queryForList(SQL_TABLE_COLUMN, paramMap);
     }
 
     /**
      * 查询表的元数据信息
      *
-     * @param paramMap 参数
      * @return
      */
-    private SqlRowSetMetaData queryTableMetaData(Map<String, String> paramMap) {
-        String querySql = SQL_TABLE_INFO.replace(REPLCE_TABLE_NAME_PARAM, paramMap.get(TABLE_NAME_PARAM));
-        SqlRowSet sqlRowSet = namedParameterJdbcTemplate.queryForRowSet(querySql, paramMap);
+    private SqlRowSetMetaData queryTableMetaData(String tableName) {
+        String querySql = SQL_TABLE_INFO.replace(REPLCE_TABLE_NAME_PARAM, tableName);
+        SqlRowSet sqlRowSet = namedParameterJdbcTemplate.queryForRowSet(querySql, new HashMap<>());
         return sqlRowSet.getMetaData();
     }
 
@@ -257,21 +288,27 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     }
 
     /**
-     * 映射表信息
+     * 映射表的注释
      *
      * @param resultSet
      * @param rowNum
      * @return
      * @throws SQLException
      */
-    private TableInfo mapperTableInfo(ResultSet resultSet, int rowNum) throws SQLException {
-        String tableName = resultSet.getString(TABLE_NAME_FIELD);
-        TableInfo tableInfo = new TableInfo();
-        tableInfo.setName(tableName);
-        tableInfo.setHumpName(this.getTableHumpName(tableName));
-        tableInfo.setUncapitalizeName(StringUtils.uncapitalize(tableInfo.getHumpName()));
-        tableInfo.setComment(resultSet.getString(TABLE_COMMENT_FIELD));
-        return tableInfo;
+    private String mapperTableComment(ResultSet resultSet, int rowNum) throws SQLException {
+        return resultSet.getString(TABLE_COMMENT_FIELD);
+    }
+
+    /**
+     * 得到表名的名称
+     *
+     * @param tableName 表名称
+     * @return
+     */
+    private String getTableName(String tableName) {
+        tableName = this.removeStartStr(tableName, codeGeneratorProperties.getMapperXmlRemoveTableNamePres());
+        tableName = this.removeEndStr(tableName, codeGeneratorProperties.getMapperXmlRemoveTableNameSufs());
+        return tableName;
     }
 
     /**
@@ -281,19 +318,43 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      * @return
      */
     private String getTableHumpName(String tableName) {
-        for (String pre : Optional.ofNullable(codeGeneratorProperties.getTableNamePres()).orElse(new HashSet<>())) {
-            if (StringUtils.startsWithIgnoreCase(tableName, pre)) {
-                tableName = StringUtils.removeStartIgnoreCase(tableName, pre);
-                break;
-            }
-        }
-        for (String suf : Optional.ofNullable(codeGeneratorProperties.getTableNameSufs()).orElse(new HashSet<>())) {
-            if (StringUtils.endsWithIgnoreCase(tableName, suf)) {
-                tableName = StringUtils.removeEndIgnoreCase(tableName, suf);
-                break;
-            }
-        }
+        tableName = this.removeStartStr(tableName, codeGeneratorProperties.getRemoveTableNamePres());
+        tableName = this.removeEndStr(tableName, codeGeneratorProperties.getRemoveTableNameSufs());
         return this.getHumpName(tableName);
+    }
+
+    /**
+     * 删除字符串的前缀
+     *
+     * @param str  字符串
+     * @param pres 要删除的前缀集合
+     * @return
+     */
+    private String removeStartStr(String str, Set<String> pres) {
+        for (String pre : Optional.ofNullable(pres).orElse(new HashSet<>())) {
+            if (StringUtils.startsWithIgnoreCase(str, pre)) {
+                str = StringUtils.removeStartIgnoreCase(str, pre);
+                break;
+            }
+        }
+        return str;
+    }
+
+    /**
+     * 删除字符串的后缀
+     *
+     * @param str  字符串
+     * @param sufs 要删除的后缀集合
+     * @return
+     */
+    private String removeEndStr(String str, Set<String> sufs) {
+        for (String suf : Optional.ofNullable(sufs).orElse(new HashSet<>())) {
+            if (StringUtils.endsWithIgnoreCase(str, suf)) {
+                str = StringUtils.removeEndIgnoreCase(str, suf);
+                break;
+            }
+        }
+        return str;
     }
 
     /**
