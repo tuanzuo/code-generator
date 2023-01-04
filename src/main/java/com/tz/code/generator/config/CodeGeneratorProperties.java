@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,29 +26,30 @@ import java.util.Set;
 public class CodeGeneratorProperties {
 
     /**
-     * mysql关键字
+     * mysql关键字配置，当表的字段存在于该配置中时生成xml的sql中的字段会自动加上``，例如status会变成`status`
      */
     private Set<String> mysqlKeyWords = Sets.newHashSet("name", "status", "type", "key", "value", "code", "valid");
 
     /**
-     * 是否生成所有表，true:是，false:否
+     * 是否对数据库中的所有表都生成代码文件，true:是，false:否
      */
     private Boolean allTableFlag = true;
 
     /**
-     * 生成代码的表名称集合，示例：t_config,t_user
+     * 指定需要生成代码文件的表名称集合，示例：t_config,t_user
+     * 【说明：当allTableFlag=true并且tableNames为空集合时则会对数据库中的所有表都生成代码文件】
      */
-    private Set<String> tableNames = new HashSet<>();
+    private List<String> tableNames = new ArrayList<>();
 
     /**
-     * 需要去掉的表名前缀，示例：t_,tab_,m_
+     * 生成代码文件和类名称时需要去掉的表名前缀，示例：t_,tab_,m_
      */
-    private Set<String> tableNamePres = new HashSet<>();
+    private Set<String> removeTableNamePres = new HashSet<>();
 
     /**
-     * 需要去掉的表名后缀，示例：_0,_1,_2022,_2023
+     * 生成代码文件和类名称时需要去掉的表名后缀，示例：_0,_1,_2022,_2023
      */
-    private Set<String> tableNameSufs = new HashSet<>();
+    private Set<String> removeTableNameSufs = new HashSet<>();
 
     /**
      * java仓库接口的路径
@@ -85,22 +87,22 @@ public class CodeGeneratorProperties {
     private String javaModelPackage;
 
     /**
-     * 是否使用lombok的@Getter和@Setter注解生成getter和setter方法，true:是，false:否
+     * java的PO是否使用lombok的@Getter和@Setter注解生成getter和setter方法，true:是，false:否
      */
     private Boolean useGetSetterAnnotation = false;
 
     /**
-     * 是否使用lombok的@Builder注解，true:是，false:否
+     * java的PO是否使用lombok的@Builder注解，true:是，false:否
      */
     private Boolean useBuilderAnnotation = false;
 
     /**
-     * 是否使用lombok的@AllArgsConstructor注解，true:是，false:否
+     * java的PO是否使用lombok的@AllArgsConstructor注解，true:是，false:否
      */
     private Boolean useAllArgsConstructorAnnotation = false;
 
     /**
-     * 是否使用lombok的@NoArgsConstructor注解，true:是，false:否
+     * java的PO是否使用lombok的@NoArgsConstructor注解，true:是，false:否
      */
     private Boolean useNoArgsConstructorAnnotation = false;
 
@@ -155,6 +157,16 @@ public class CodeGeneratorProperties {
     private String mapperUdfXmlPackage;
 
     /**
+     * 生成的xml中对应sql中的表名称需要去掉的表名前缀，示例：t_,tab_,m_
+     */
+    private Set<String> mapperXmlRemoveTableNamePres = new HashSet<>();
+
+    /**
+     * 生成的xml中对应sql中的表名称需要去掉的表名后缀，示例：_0,_1,_2022,_2023
+     */
+    private Set<String> mapperXmlRemoveTableNameSufs = new HashSet<>();
+
+    /**
      * xml的模板集合
      */
     private List<String> mapperXmlTemplates = Lists.newArrayList("/xml/BaseMapperXml.ftl", "/xml/UdfMapperXml.ftl");
@@ -167,6 +179,6 @@ public class CodeGeneratorProperties {
     /**
      * 代码作者
      */
-    private String author = "tuanzuo code generator";
+    private String author = "code generator";
 
 }
