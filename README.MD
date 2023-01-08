@@ -1,8 +1,54 @@
-### 自定义代码生成器
+## 自定义代码生成器
 
-#### 背景
+### 功能介绍
 
-在使用[MyBatis Generator](http://mybatis.org/generator/index.html)生成代码时遇到了以下一些问题，所以自定义一个代码生成器来替代[MyBatis Generator](http://mybatis.org/generator/index.html)用于代码的生成。
+- 支持生成xml，mapper，po，repository
+- 用于替代[MyBatis Generator](http://mybatis.org/generator/index.html)
+
+### 如何使用
+
+- 修改config/application.properties中的数据库配置
+- 运行com.tz.code.generator.CodeGeneratorApplication#main方法即可生成代码
+
+### 配置说明
+
+| 配置项                                   | 说明                                                         | 是否必须 | 类型    | 默认值                                                     | 配置值示例                                                 |
+| ---------------------------------------- | ------------------------------------------------------------ | -------- | ------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| code.gen.mysqlKeyWords                   | mysql关键字配置，当表的字段存在于该配置中时生成xml的sql中的字段会自动加上\`\`，例如status会变成\`status\` | 否       | Set     | name,status,type,key,value,code,valid                      | name,status,type,key,value,code,valid                      |
+| code.gen.allTableFlag                    | 是否对数据库中的所有表都生成代码文件                         | 否       | Boolean | true                                                       | true                                                       |
+| code.gen.tableNames                      | 指定需要生成代码文件的表名称集合；当code.gen.allTableFlag=true并且该配置项未配置时则会对数据库中的所有表都生成代码文件 | 否       | List    |                                                            | t_config,t_user                                            |
+| code.gen.removeTableNamePres             | 生成代码文件和类名称时需要去掉的表名前缀                     | 否       | Set     |                                                            | t\_,tab\_,m\_                                              |
+| code.gen.removeTableNameSufs             | 生成代码文件和类名称时需要去掉的表名后缀                     | 否       | Set     |                                                            | \_0,\_1,\_2022,\_2023                                      |
+| code.gen.javaRepositoryPath              | java仓库接口的路径                                           | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.javaRepositoryImplPath          | java仓库实现类的路径                                         | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.javaRepositoryPackage           | java仓库接口的包路径                                         | 是       | String  |                                                            | com.tz.gen.code.repository                                 |
+| code.gen.javaRepositoryImplPackage       | java仓库实现类的包路径                                       | 是       | String  |                                                            | com.tz.gen.code.repository.impl                            |
+| code.gen.javaRepositoryTemplates         | java仓库的模板集合                                           | 否       | List    | /repository/IRepository.ftl,/repository/RepositoryImpl.ftl | /repository/IRepository.ftl,/repository/RepositoryImpl.ftl |
+| code.gen.javaModelPath                   | java模型(PO)的路径                                           | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.javaModelPackage                | java模型(PO)的包路径                                         | 是       | String  |                                                            | com.tz.gen.code.po                                         |
+| code.gen.useGetSetterAnnotation          | java的PO是否使用lombok的@Getter和@Setter注解                 | 否       | Boolean | false                                                      | false                                                      |
+| code.gen.useBuilderAnnotation            | java的PO是否使用lombok的@Builder注解                         | 否       | Boolean | false                                                      | false                                                      |
+| code.gen.useAllArgsConstructorAnnotation | java的PO是否使用lombok的@AllArgsConstructor注解              | 否       | Boolean | false                                                      | false                                                      |
+| code.gen.useNoArgsConstructorAnnotation  | java的PO是否使用lombok的@NoArgsConstructor注解               | 否       | Boolean | false                                                      | false                                                      |
+| code.gen.javaModelTemplates              | java模型的模板集合                                           | 否       | List    | /model/po.ftl                                              | /model/po.ftl                                              |
+| code.gen.javaMapperPath                  | java Mapper的路径                                            | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.javaUdfMapperPath               | java UdfMapper的路径                                         | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.javaMapperPackage               | java Mapper的包路径                                          | 是       | String  |                                                            | com.tz.gen.code.mapper.base                                |
+| code.gen.javaUdfMapperPackage            | java UdfMapper的包路径                                       | 是       | String  |                                                            | com.tz.gen.code.mapper.udf                                 |
+| code.gen.javaMapperTemplates             | java Mapper的模板集合                                        | 否       | List    | /mapper/BaseMapper.ftl,/mapper/UdfMapper.ftl               | /mapper/BaseMapper.ftl,/mapper/UdfMapper.ftl               |
+| code.gen.mapperXmlPath                   | xml的路径                                                    | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.mapperUdfXmlPath                | udf xml的路径                                                | 是       | String  |                                                            | D:\\gendercode                                             |
+| code.gen.mapperXmlPackage                | xml的包路径                                                  | 是       | String  |                                                            | xml.base                                                   |
+| code.gen.mapperUdfXmlPackage             | udf xml的包路径                                              | 是       | String  |                                                            | xml.udf                                                    |
+| code.gen.mapperXmlRemoveTableNamePres    | 生成的xml中对应sql中的表名称需要去掉的表名前缀               | 否       | Set     |                                                            | t\_,tab\_,m\_                                              |
+| code.gen.mapperXmlRemoveTableNameSufs    | 生成的xml中对应sql中的表名称需要去掉的表名后缀               | 否       | Set     |                                                            | \_0,\_1,\_2022,\_2023                                      |
+| code.gen.mapperXmlTemplates              | xml的模板集合                                                | 否       | List    | /xml/BaseMapperXml.ftl,/xml/UdfMapperXml.ftl               | /xml/BaseMapperXml.ftl,/xml/UdfMapperXml.ftl               |
+| code.gen.useJSR310Types                  | [属性文档](http://mybatis.org/generator/configreference/javaTypeResolver.html) | 否       | Boolean | false                                                      | false                                                      |
+| code.gen.author                          | 代码作者                                                     | 否       | String  | code generator                                             | tuanzuo                                                    |
+
+### 背景
+
+在使用[MyBatis Generator](http://mybatis.org/generator/index.html)生成代码时遇到了以下一些问题，所以自定义一个代码生成器来解决这些问题，从而替代[MyBatis Generator](http://mybatis.org/generator/index.html)用于代码的生成。
 
 - 生成的代码文件中有一堆无用的注释，看着不简洁清晰
 
@@ -172,49 +218,3 @@
       }
   }
   ```
-
-#### 功能介绍
-
-- 支持生成xml，mapper，po，repository
-- 用于替代[MyBatis Generator](http://mybatis.org/generator/index.html)
-
-#### 如何使用
-
-- 修改config/application.properties中的数据库配置
-- 运行com.tz.code.generator.CodeGeneratorApplication#main方法即可生成代码
-
-#### 配置说明
-
-| 配置项                                   | 说明                                                         | 是否必须 | 类型    | 默认值                                                     | 配置值示例                                                 |
-| ---------------------------------------- | ------------------------------------------------------------ | -------- | ------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| code.gen.mysqlKeyWords                   | mysql关键字配置，当表的字段存在于该配置中时生成xml的sql中的字段会自动加上\`\`，例如status会变成\`status\` | 否       | Set     | name,status,type,key,value,code,valid                      | name,status,type,key,value,code,valid                      |
-| code.gen.allTableFlag                    | 是否对数据库中的所有表都生成代码文件                         | 否       | Boolean | true                                                       | true                                                       |
-| code.gen.tableNames                      | 指定需要生成代码文件的表名称集合；当code.gen.allTableFlag=true并且该配置项未配置时则会对数据库中的所有表都生成代码文件 | 否       | List    |                                                            | t_config,t_user                                            |
-| code.gen.removeTableNamePres             | 生成代码文件和类名称时需要去掉的表名前缀                     | 否       | Set     | t\_,tab\_,m\_                                              | t\_,tab\_,m\_                                              |
-| code.gen.removeTableNameSufs             | 生成代码文件和类名称时需要去掉的表名后缀                     | 否       | Set     | \_0,\_1,\_2022,\_2023                                      | \_0,\_1,\_2022,\_2023                                      |
-| code.gen.javaRepositoryPath              | java仓库接口的路径                                           | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.javaRepositoryImplPath          | java仓库实现类的路径                                         | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.javaRepositoryPackage           | java仓库接口的包路径                                         | 是       | String  |                                                            | com.tz.gen.code.repository                                 |
-| code.gen.javaRepositoryImplPackage       | java仓库实现类的包路径                                       | 是       | String  |                                                            | com.tz.gen.code.repository.impl                            |
-| code.gen.javaRepositoryTemplates         | java仓库的模板集合                                           | 否       | List    | /repository/IRepository.ftl,/repository/RepositoryImpl.ftl | /repository/IRepository.ftl,/repository/RepositoryImpl.ftl |
-| code.gen.javaModelPath                   | java模型(PO)的路径                                           | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.javaModelPackage                | java模型(PO)的包路径                                         | 是       | String  |                                                            | com.tz.gen.code.po                                         |
-| code.gen.useGetSetterAnnotation          | java的PO是否使用lombok的@Getter和@Setter注解                 | 否       | Boolean | false                                                      | false                                                      |
-| code.gen.useBuilderAnnotation            | java的PO是否使用lombok的@Builder注解                         | 否       | Boolean | false                                                      | false                                                      |
-| code.gen.useAllArgsConstructorAnnotation | java的PO是否使用lombok的@AllArgsConstructor注解              | 否       | Boolean | false                                                      | false                                                      |
-| code.gen.useNoArgsConstructorAnnotation  | java的PO是否使用lombok的@NoArgsConstructor注解               | 否       | Boolean | false                                                      | false                                                      |
-| code.gen.javaModelTemplates              | java模型的模板集合                                           | 否       | List    | /model/po.ftl                                              | /model/po.ftl                                              |
-| code.gen.javaMapperPath                  | java Mapper的路径                                            | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.javaUdfMapperPath               | java UdfMapper的路径                                         | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.javaMapperPackage               | java Mapper的包路径                                          | 是       | String  |                                                            | com.tz.gen.code.mapper.base                                |
-| code.gen.javaUdfMapperPackage            | java UdfMapper的包路径                                       | 是       | String  |                                                            | com.tz.gen.code.mapper.udf                                 |
-| code.gen.javaMapperTemplates             | java Mapper的模板集合                                        | 否       | List    | /mapper/BaseMapper.ftl,/mapper/UdfMapper.ftl               | /mapper/BaseMapper.ftl,/mapper/UdfMapper.ftl               |
-| code.gen.mapperXmlPath                   | xml的路径                                                    | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.mapperUdfXmlPath                | udf xml的路径                                                | 是       | String  |                                                            | D:\\gendercode                                             |
-| code.gen.mapperXmlPackage                | xml的包路径                                                  | 是       | String  |                                                            | xml.base                                                   |
-| code.gen.mapperUdfXmlPackage             | udf xml的包路径                                              | 是       | String  |                                                            | xml.udf                                                    |
-| code.gen.mapperXmlRemoveTableNamePres    | 生成的xml中对应sql中的表名称需要去掉的表名前缀               | 否       | Set     |                                                            | t\_,tab\_,m\_                                              |
-| code.gen.mapperXmlRemoveTableNameSufs    | 生成的xml中对应sql中的表名称需要去掉的表名后缀               | 否       | Set     |                                                            | \_0,\_1,\_2022,\_2023                                      |
-| code.gen.mapperXmlTemplates              | xml的模板集合                                                | 否       | List    | /xml/BaseMapperXml.ftl,/xml/UdfMapperXml.ftl               | /xml/BaseMapperXml.ftl,/xml/UdfMapperXml.ftl               |
-| code.gen.useJSR310Types                  | [属性文档](http://mybatis.org/generator/configreference/javaTypeResolver.html) | 否       | Boolean | false                                                      | false                                                      |
-| code.gen.author                          | 代码作者                                                     | 否       | String  | code generator                                             | tuanzuo                                                    |
