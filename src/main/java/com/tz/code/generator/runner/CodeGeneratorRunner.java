@@ -55,7 +55,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      */
     private static final String PRIMARY_KEY_CONSTANT = "PRI";
     /**
-     * 数据库下的所有表
+     * 数据库下所有表的查询sql
      */
     private static final String SQL_DB_TABLE = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = :dbName";
     /**
@@ -83,9 +83,9 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     private String dbName;
 
     @Autowired
-    private CodeGeneratorProperties codeGeneratorProperties;
-    @Autowired
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    @Autowired
+    private CodeGeneratorProperties codeGeneratorProperties;
     @Autowired
     private TypeConverter typeConverter;
     @Autowired
