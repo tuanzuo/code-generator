@@ -112,27 +112,27 @@ public class CodeGeneratorProperties {
     private List<String> javaModelTemplates = Lists.newArrayList("/model/po.ftl");
 
     /**
-     * javaMapper的路径
+     * java Mapper的路径
      */
     private String javaMapperPath;
 
     /**
-     * javaUdfMapper的路径
+     * java UdfMapper的路径
      */
     private String javaUdfMapperPath;
 
     /**
-     * javaMapper的包路径
+     * java Mapper的包路径
      */
     private String javaMapperPackage;
 
     /**
-     * javaUdfMapper的包路径
+     * java UdfMapper的包路径
      */
     private String javaUdfMapperPackage;
 
     /**
-     * javaMapper的模板集合
+     * java Mapper的模板集合
      */
     private List<String> javaMapperTemplates = Lists.newArrayList("/mapper/BaseMapper.ftl", "/mapper/UdfMapper.ftl");
 
