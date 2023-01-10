@@ -151,7 +151,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         //java类型名称集合
         Set<String> javaTypeNames = new HashSet<>();
         //4、构建字段信息
-        List<FieldInfo> fieldInfos = this.buildFieldInfoList(columnList, metaData, javaTypeNames);
+        List<FieldInfo> fieldInfos = this.buildFieldInfoList(columnList, metaData, javaTypeNames, tableName);
         //5、设置表信息
         tableInfo.setColumnInfos(fieldInfos);
         tableInfo.setJavaTypeNames(javaTypeNames);
@@ -239,9 +239,10 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      * @param columnList    字段列表
      * @param metaData      表的元数据信息
      * @param javaTypeNames java类型名称集合
+     * @param tableName     表名称
      * @return
      */
-    private List<FieldInfo> buildFieldInfoList(List<Map<String, Object>> columnList, SqlRowSetMetaData metaData, Set<String> javaTypeNames) {
+    private List<FieldInfo> buildFieldInfoList(List<Map<String, Object>> columnList, SqlRowSetMetaData metaData, Set<String> javaTypeNames, String tableName) {
         //字段和注释的对应Map，key:字段名，value:字段对应的注释
         Map<String, String> fieldToCommentMap = new HashMap<>();
         //主键集合
@@ -262,11 +263,17 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         Set<String> mysqlKeyWords = Optional.ofNullable(codeGeneratorProperties.getMysqlKeyWords()).orElse(new HashSet<>());
         for (int column = 1; column <= metaData.getColumnCount(); column++) {
             String columnName = metaData.getColumnName(column);
-            int columnType = metaData.getColumnType(column);
+            if(Optional.ofNullable(codeGeneratorProperties.getRemoveFieldNames()).orElse(new HashSet<>()).contains(StringUtils.lowerCase(columnName))){
+                LOGGER.info("[生成代码] [构建字段信息] 数据库：{}，表名称：{}，去掉字段：{}", dbName, tableName, columnName);
+                continue;
+            }
+
             String convertName = columnName;
             if (mysqlKeyWords.contains(StringUtils.lowerCase(columnName))) {
                 convertName = StringUtils.join(CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES, convertName, CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES);
             }
+
+            int columnType = metaData.getColumnType(column);
 
             FieldInfo fieldInfo = new FieldInfo();
             fieldInfo.setName(columnName);
