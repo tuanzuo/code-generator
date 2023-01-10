@@ -264,7 +264,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         for (int column = 1; column <= metaData.getColumnCount(); column++) {
             String columnName = metaData.getColumnName(column);
             if(Optional.ofNullable(codeGeneratorProperties.getRemoveFieldNames()).orElse(new HashSet<>()).contains(StringUtils.lowerCase(columnName))){
-                LOGGER.info("[生成代码] [构建字段信息] 去掉字段：{}，表名称：{}，数据库：{}", columnName, tableName, dbName);
+                LOGGER.info("[生成代码] [构建字段信息] 数据库：{}，表名称：{}，去掉字段：{}", dbName, tableName, columnName);
                 continue;
             }
 
