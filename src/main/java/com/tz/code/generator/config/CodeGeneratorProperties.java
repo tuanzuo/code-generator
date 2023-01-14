@@ -52,9 +52,19 @@ public class CodeGeneratorProperties {
     private Set<String> removeTableNameSufs = new HashSet<>();
 
     /**
-     * 生成的xml和po中需要去掉的字段以及字段对应的属性，示例：mobile_enc,name_enc
+     * 字段集合，用于生成的xml和po中需要去掉的字段以及字段对应的属性，示例：mobile_enc,name_enc
      */
     private Set<String> removeFieldNames = new HashSet<>();
+
+    /**
+     * 字段前缀集合，用于生成的xml和po中需要去掉的字段前缀以及去掉字段前缀后再生成对应的属性，示例：enc_,pnc_
+     */
+    private Set<String> removeFieldNamePres = new HashSet<>();
+
+    /**
+     * 字段后缀集合，用于生成的xml和po中需要去掉的字段后缀以及去掉字段后缀后再生成对应的属性，示例：_enc,_pnc
+     */
+    private Set<String> removeFieldNameSufs = new HashSet<>();
 
     /**
      * java仓库接口的路径

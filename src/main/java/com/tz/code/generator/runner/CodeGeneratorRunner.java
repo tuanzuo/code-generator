@@ -168,7 +168,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
      */
     private TableInfo buildTableInfo(String tableName) {
         TableInfo tableInfo = new TableInfo();
-        tableInfo.setName(this.getTableName(tableName));
+        tableInfo.setName(this.handleTableName(tableName));
         tableInfo.setHumpName(this.getTableHumpName(tableName));
         tableInfo.setUncapitalizeName(StringUtils.uncapitalize(tableInfo.getHumpName()));
         return tableInfo;
@@ -262,23 +262,24 @@ public class CodeGeneratorRunner implements CommandLineRunner {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
         Set<String> mysqlKeyWords = Optional.ofNullable(codeGeneratorProperties.getMysqlKeyWords()).orElse(new HashSet<>());
         for (int column = 1; column <= metaData.getColumnCount(); column++) {
+            //字段名称
             String columnName = metaData.getColumnName(column);
-            if(Optional.ofNullable(codeGeneratorProperties.getRemoveFieldNames()).orElse(new HashSet<>()).contains(StringUtils.lowerCase(columnName))){
+            //移除字段
+            if (Optional.ofNullable(codeGeneratorProperties.getRemoveFieldNames()).orElse(new HashSet<>()).contains(StringUtils.lowerCase(columnName))) {
                 LOGGER.info("[生成代码] [构建字段信息] 数据库：{}，表名称：{}，去掉字段：{}", dbName, tableName, columnName);
                 continue;
             }
-
-            String convertName = columnName;
-            if (mysqlKeyWords.contains(StringUtils.lowerCase(columnName))) {
-                convertName = StringUtils.join(CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES, convertName, CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES);
-            }
-
+            //处理后的字段名称
+            String handledName = this.handleColumnName(columnName);
+            //转换后的字段名称
+            String convertedName = this.convertColumnName(mysqlKeyWords, handledName);
+            //字段类型
             int columnType = metaData.getColumnType(column);
 
             FieldInfo fieldInfo = new FieldInfo();
-            fieldInfo.setName(columnName);
-            fieldInfo.setConvertName(convertName);
-            fieldInfo.setHumpName(this.getFieldHumpName(columnName));
+            fieldInfo.setName(handledName);
+            fieldInfo.setConvertName(convertedName);
+            fieldInfo.setHumpName(this.getFieldHumpName(handledName));
             fieldInfo.setComment(fieldToCommentMap.get(columnName));
             fieldInfo.setPrimaryKeyFlag(primaryKeyFieldSet.contains(columnName) ? true : false);
             fieldInfo.setJdbcTypeName(typeConverter.getJdbcTypeName(columnType));
@@ -286,7 +287,7 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             fieldInfo.setJavaTypeName(javaTypeName);
             String[] javaTypeNameSplit = StringUtils.split(javaTypeName, CodeGenConstant.SYMBOL_SPOT);
             fieldInfo.setJavaTypeSimpleName(javaTypeNameSplit[javaTypeNameSplit.length - 1]);
-            fieldInfo.setJavaFieldName(this.getJavaFieldName(columnName));
+            fieldInfo.setJavaFieldName(this.getJavaFieldName(handledName));
             fieldInfoList.add(fieldInfo);
 
             javaTypeNames.add(fieldInfo.getJavaTypeName());
@@ -307,12 +308,12 @@ public class CodeGeneratorRunner implements CommandLineRunner {
     }
 
     /**
-     * 得到表名的名称
+     * 处理表名的名称
      *
      * @param tableName 表名称
      * @return
      */
-    private String getTableName(String tableName) {
+    private String handleTableName(String tableName) {
         tableName = this.removeStartStr(tableName, codeGeneratorProperties.getMapperXmlRemoveTableNamePres());
         tableName = this.removeEndStr(tableName, codeGeneratorProperties.getMapperXmlRemoveTableNameSufs());
         return tableName;
@@ -362,6 +363,33 @@ public class CodeGeneratorRunner implements CommandLineRunner {
             }
         }
         return str;
+    }
+
+    /**
+     * 处理字段的名称
+     *
+     * @param columnName 字段名称
+     * @return
+     */
+    private String handleColumnName(String columnName) {
+        columnName = this.removeStartStr(columnName, codeGeneratorProperties.getRemoveFieldNamePres());
+        columnName = this.removeEndStr(columnName, codeGeneratorProperties.getRemoveFieldNameSufs());
+        return columnName;
+    }
+
+    /**
+     * 转换字段的名称
+     *
+     * @param mysqlKeyWords mysql关键字
+     * @param handledName   处理后的字段名称
+     * @return
+     */
+    private String convertColumnName(Set<String> mysqlKeyWords, String handledName) {
+        String convertedName = handledName;
+        if (mysqlKeyWords.contains(StringUtils.lowerCase(handledName))) {
+            convertedName = StringUtils.join(CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES, handledName, CodeGenConstant.SYMBOL_OBLIQUE_SINGLE_QUOTES);
+        }
+        return convertedName;
     }
 
     /**
